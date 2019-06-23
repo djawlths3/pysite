@@ -1,12 +1,11 @@
 import math
-from builtins import int, type, str
+
 
 from django.db.models import F
 from django.db.models.functions import Ceil
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 
-# Create your views here.
 
 
 from board.boardmodule import paging
@@ -60,10 +59,8 @@ def add(request):
         Board.objects.filter(groupno=board.groupno).filter(orderno__gte=board.orderno).update(orderno=F('orderno') + 1)
         board.depth = parent.depth + 1
     else:
-       groupno = Board.objects.latest('id')
-       print(groupno)
-       print(int(str(groupno)) + 1)
-       board.groupno = int(groupno) + 1
+       lastboard = Board.objects.order_by('id').last()
+       board.groupno = lastboard.id +1
 
 
     board.save()
