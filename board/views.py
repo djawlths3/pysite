@@ -1,5 +1,5 @@
 import math
-from builtins import int, type
+from builtins import int, type, str
 
 from django.db.models import F
 from django.db.models.functions import Ceil
@@ -7,6 +7,8 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 
 # Create your views here.
+
+
 from board.boardmodule import paging
 from board.models import Board
 
@@ -15,10 +17,12 @@ def list(request):
     pageno = int(request.GET.get('p',1))
     pagesawcnt = 5
 
-    boardlist = Board.objects.all().filter(title__contains='').order_by('-id')[(pageno -1)*pagesawcnt : (pageno -1)*pagesawcnt +  pagesawcnt]
+    boardlist = Board.objects.all().filter(title__contains='').order_by('-groupno', 'orderno')[(pageno -1)*pagesawcnt : (pageno -1)*pagesawcnt +  pagesawcnt]
     total = Board.objects.filter(title__contains='').count()
     pagesize = math.ceil(total/pagesawcnt)
     pagelist = paging(pageno,pagesize)
+
+
     data = {
         'boardlist': boardlist,
         'pagelist': pagelist,
@@ -51,13 +55,16 @@ def add(request):
 
     if paraentno != '':
         parent = Board.objects.get(id=paraentno)
-        board.groupno = paraentno.groupno
+        board.groupno = parent.groupno
         board.orderno = parent.orderno + 1
         Board.objects.filter(groupno=board.groupno).filter(orderno__gte=board.orderno).update(orderno=F('orderno') + 1)
         board.depth = parent.depth + 1
     else:
        groupno = Board.objects.latest('id')
-       board.groupno = groupno + 1
+       print(groupno)
+       print(int(str(groupno)) + 1)
+       board.groupno = int(groupno) + 1
+
 
     board.save()
 
