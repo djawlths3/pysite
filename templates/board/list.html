@@ -34,25 +34,22 @@
 					{% endfor %}
 				</table>
 
-		<!-- pager 추가 -->
+			<!-- pager 추가 -->
 				<div class="pager">
 					<ul>
-					<c:if test="${paging.now > 1 }">
-						<li><a href="${pageContext.servletContext.contextPath}/board/list?p=${paging.now -1}">◀</a></li>
-					</c:if>
-					<c:forEach var = 'item' items='${paging.pageList}' step="1" varStatus="status">
-						<c:choose>
-							<c:when test="${item eq paging.now}">
-								<li class="selected"><a href="${pageContext.servletContext.contextPath}/board/list?p=${item}">${item}</a></li>
-							</c:when>
-							<c:otherwise>
-								<li><a href="${pageContext.servletContext.contextPath}/board/list?p=${item}">${item}</a></li>
-							</c:otherwise>
-						</c:choose>
-					</c:forEach>
-					<c:if test="${paging.now < paging.size }">
-						<li><a href="${pageContext.servletContext.contextPath}/board/list?p=${paging.now +1}">▶</a></li>
-					</c:if>
+						{% if nowpage > 1 %}
+							<li><a href="/board?p={{nowpage | sub:1}}">◀</a></li>
+						{% endif %}
+						{% for page in pagelist%}
+							{% if page == nowpage %}
+								<li class="selected"><a href="/board?p={{page}}">{{page}}</a></li>
+							{%else%}
+								<li><a href="/board?p={{page}}">{{page}}</a></li>
+							{% endif %}
+						{% endfor %}
+						{% if nowpage < pagesize %}
+							<li><a href="/board?p={{nowpage | add:1}}">▶</a></li>
+						{% endif %}
 					</ul>
 				</div>
 				<!-- pager 추가 -->

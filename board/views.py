@@ -1,14 +1,28 @@
+import math
+from builtins import int
+
+from django.db.models.functions import Ceil
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 
 # Create your views here.
+from board.boardmodule import paging
 from board.models import Board
 
 
 def list(request):
-    boardlist = Board.objects.all().order_by('-id')
+    pageno = int(request.GET.get('p',1))
+    pagesawcnt = 5
+
+    boardlist = Board.objects.all().filter(title__contains='').order_by('-id')[pageno: pageno + pagesawcnt]
+    total = Board.objects.filter(title__contains='').count()
+    pagesize = math.ceil(total/pagesawcnt)
+    pagelist = paging(pageno,pagesize)
     data = {
-        'boardlist': boardlist
+        'boardlist': boardlist,
+        'pagelist': pagelist,
+        'nowpage' : pageno,
+        'pagesize' : pagesize
     }
     return render(request ,'board/list.html', data)
 
