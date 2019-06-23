@@ -46,6 +46,7 @@ urlpatterns = [
     path('board/view/<int:id>', board_views.viewdetail),
     path('board/modify', board_views.modify),
     path('board/modifypost', board_views.modifypost),
+    # path('board/reply', board_views.reply),
 
 
 

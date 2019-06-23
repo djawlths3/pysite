@@ -25,11 +25,15 @@
 					{% for board in boardlist%}
 					<tr>
 						<td>[{{forloop.revcounter}}]</td>
-						<td><a href="/board/view/{{board.id}}">{{board.title}}</a></td>
+						<td>
+							{% if board.depth != 0 %}
+								<img src="/assets/images/reply.png" alt="답글" style="margin-left:{{board.depth|mul:10}}px;" />
+							{% endif %}
+							<a href="/board/view/{{board.id}}">{{board.title}}</a></td>
 						<td>{{board.user.name}}</td>
 						<td>{{board.hit}}</td>
 						<td>{{board.regdate  | date:'Y-m-d H:i:s'}}</td>
-						<td><a href="" class="del">삭제</a></td>
+						<td><a href="/board/delete?id={{board.id}}" class="del">삭제</a></td>
 					</tr>
 					{% endfor %}
 				</table>

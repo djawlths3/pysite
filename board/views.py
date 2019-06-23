@@ -1,6 +1,7 @@
 import math
-from builtins import int
+from builtins import int, type
 
+from django.db.models import F
 from django.db.models.functions import Ceil
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
@@ -14,7 +15,7 @@ def list(request):
     pageno = int(request.GET.get('p',1))
     pagesawcnt = 5
 
-    boardlist = Board.objects.all().filter(title__contains='').order_by('-id')[pageno: pageno + pagesawcnt]
+    boardlist = Board.objects.all().filter(title__contains='').order_by('-id')[(pageno -1)*pagesawcnt : (pageno -1)*pagesawcnt +  pagesawcnt]
     total = Board.objects.filter(title__contains='').count()
     pagesize = math.ceil(total/pagesawcnt)
     pagelist = paging(pageno,pagesize)
@@ -28,15 +29,17 @@ def list(request):
 
 
 def write(request):
-    boardlist = Board.objects.all().order_by('-id')
+    id = request.GET.get('id','')
+    # boardlist = Board.objects.all().order_by('-id')
     data = {
-        'guestbooklist': boardlist
+        'id': id
     }
     return render(request ,'board/write.html', data)
 
 
 def add(request):
     authuser = request.session['authuser']
+    paraentno = request.POST.get('parentno')
 
     if authuser is None:
         return HttpResponseRedirect('/board')
@@ -45,6 +48,17 @@ def add(request):
     board.user_id = authuser['id']
     board.title = request.POST.get('title')
     board.content = request.POST.get('contents')
+
+    if paraentno != '':
+        parent = Board.objects.get(id=paraentno)
+        board.groupno = paraentno.groupno
+        board.orderno = parent.orderno + 1
+        Board.objects.filter(groupno=board.groupno).filter(orderno__gte=board.orderno).update(orderno=F('orderno') + 1)
+        board.depth = parent.depth + 1
+    else:
+       groupno = Board.objects.latest('id')
+       board.groupno = groupno + 1
+
     board.save()
 
     return HttpResponseRedirect('/board')

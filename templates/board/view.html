@@ -29,10 +29,9 @@
 					<a href="/board">글목록</a>
 					{% if delandmodify %}
 					<a href="/board/modify?id={{boarddata.id}}">글수정</a>
-					<a href="/board/modify?id={{boarddata.id}}">글삭제</a>
-					{%else%}
-					<a href="/board/modify?id={{boarddata.id}}">답글</a>
 					{% endif %}
+					<a href="/board/write?id={{boarddata.id}}">답글</a>
+
 				</div>
 			</div>
 		</div>

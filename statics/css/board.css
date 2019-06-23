@@ -42,7 +42,8 @@ input#kwd	{
 .tbl-ex th, 
 .tbl-ex td	{ 
 	padding:8px;
-	text-align:center; 	 
+	text-align:center;
+	text-align: left;
 }
 	
 .tbl-ex th	{ 
