@@ -6,7 +6,11 @@
 {% endblock %}
 
 {% block content %}
-
+			{% if request.GET.result == 'fail' %}
+				<script>
+					alert('자신의 글만 삭제 할 수 있습니다.')
+				</script>
+			{% endif %}
 		<div id="content">
 			<div id="board">
 				<form id="search_form" action="/board/" method="post">

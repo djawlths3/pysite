@@ -154,7 +154,7 @@ def delete(request):
         return HttpResponseRedirect('/board')
 
     if authuser['id'] != boarddata.user.id:
-        return HttpResponseRedirect('/board')
+        return HttpResponseRedirect('/board?result=fail')
 
     if boarddata.delyn == 'Y':
         return HttpResponseRedirect('/board')
