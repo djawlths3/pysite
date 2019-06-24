@@ -1,8 +1,9 @@
 import math
 
 
-from django.db.models import F
-from django.db.models.functions import Ceil
+
+from django.db.models.functions import Ceil, datetime
+from django.db.models import Max, F
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 
@@ -14,10 +15,12 @@ from board.models import Board
 
 def list(request):
     pageno = int(request.GET.get('p',1))
+    kwd = str(request.POST.get('kwd',''))
+
     pagesawcnt = 5
 
-    boardlist = Board.objects.all().filter(title__contains='').order_by('-groupno', 'orderno')[(pageno -1)*pagesawcnt : (pageno -1)*pagesawcnt +  pagesawcnt]
-    total = Board.objects.filter(title__contains='').count()
+    boardlist = Board.objects.all().filter(title__contains=kwd).order_by('-groupno', 'orderno')[(pageno -1)*pagesawcnt : (pageno -1)*pagesawcnt +  pagesawcnt]
+    total = Board.objects.filter(title__contains=kwd).count()
     pagesize = math.ceil(total/pagesawcnt)
     pagelist = paging(pageno,pagesize)
 
@@ -32,6 +35,8 @@ def list(request):
 
 
 def write(request):
+    if request.session.get('authuser') == None:
+        return HttpResponseRedirect('/user/loginform')
     id = request.GET.get('id','')
     # boardlist = Board.objects.all().order_by('-id')
     data = {
@@ -41,6 +46,9 @@ def write(request):
 
 
 def add(request):
+    if request.session.get('authuser') == None:
+        return HttpResponseRedirect('/user/loginform')
+
     authuser = request.session['authuser']
     paraentno = request.POST.get('parentno')
 
@@ -59,26 +67,50 @@ def add(request):
         Board.objects.filter(groupno=board.groupno).filter(orderno__gte=board.orderno).update(orderno=F('orderno') + 1)
         board.depth = parent.depth + 1
     else:
-       lastboard = Board.objects.order_by('id').last()
-       board.groupno = lastboard.id +1
+        lastboard = Board.objects.order_by('id').last()
+        if lastboard == None:
+            board.groupno = 1
+        else:
+            board.groupno = lastboard.id +1
 
 
     board.save()
 
     return HttpResponseRedirect('/board')
 
+
 def viewdetail(request, id):
+    if request.session.get('authuser') is None:
+        return HttpResponseRedirect('/user/loginform')
     boarddata = Board.objects.get(id=id)
     authuser = request.session['authuser']
     delandmodify = False
+
     if authuser['id'] == boarddata.user.id:
         delandmodify = True
     data = {
         'boarddata': boarddata,
-        'delandmodify' :  delandmodify
+        'delandmodify': delandmodify
     }
+    response = render(request ,'board/view.html', data)
 
-    return render(request ,'board/view.html', data)
+    tomorrow = datetime.datetime.replace(datetime.datetime.now(), hour=23, minute=59, second=0)
+    expires = datetime.datetime.strftime(tomorrow, "%a, %d-%b-%Y %H:%M:%S GMT")
+    cookie_id = str(authuser['id'])
+    # 쿠키 값을 확인 없으면 만든다
+    if cookie_id not in request.COOKIES:
+        # 조회수 1 증가
+        print('여기가어디라고들어오느냐')
+        print(request.COOKIES)
+        Board.objects.filter(id=id).update(hit=F('hit')+1)
+        response.set_cookie(cookie_id, str(id), expires =expires)
+    else:
+        boardlist = request.COOKIES[cookie_id].split('//')
+        if str(id) not in boardlist:
+            Board.objects.filter(id=id).update(hit=F('hit') + 1)
+            response.set_cookie(cookie_id, request.COOKIES[cookie_id]+'//'+str(id), expires=expires)
+
+    return response
 
 def modify(request):
     no = request.GET.get('id')
@@ -110,3 +142,23 @@ def modifypost(request):
     Board.objects.filter(id=no).update(title=request.POST.get('title'), content=request.POST.get('contents'))
 
     return  HttpResponseRedirect('/board/view/{0}'.format(no))
+
+def delete(request):
+    if request.session.get('authuser') == None:
+        return HttpResponseRedirect('/user/loginform')
+    no = request.GET.get('id')
+    authuser = request.session['authuser']
+    boarddata = Board.objects.get(id=no)
+
+    if authuser is None:
+        return HttpResponseRedirect('/board')
+
+    if authuser['id'] != boarddata.user.id:
+        return HttpResponseRedirect('/board')
+
+    if boarddata.delyn == 'Y':
+        return HttpResponseRedirect('/board')
+
+    Board.objects.filter(id=no).update(title='삭제된 글 입니다', content='',delyn='Y')
+
+    return  HttpResponseRedirect('/board/')

@@ -13,3 +13,4 @@ class Board(models.Model):
     orderno = models.IntegerField(default=0)
     depth = models.IntegerField(default=0)
     user = models.ForeignKey(User, to_field='id', on_delete=models.CASCADE)
+    delyn = models.CharField(max_length=2, default='N')
